@@ -3,84 +3,229 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mini App Test</title>
+  <title>Centrale Allarme</title>
 
-  <!-- SDK Telegram: serve per leggere utente e usare sendData -->
+  <!-- Telegram Mini App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
-    body { font-family: system-ui, sans-serif; padding: 16px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; margin: 12px 0; }
-    .small { opacity:.75; font-size: 13px; }
-    button { width: 100%; padding: 14px; font-size: 16px; margin-top: 10px; border-radius: 10px; border: 0; }
-    .row { display:flex; gap:10px; }
-    .row button { width: 50%; }
-    #log { white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+    :root {
+      --bg: #020617;
+      --card: #020617;
+      --border: #1e293b;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --green: #22c55e;
+      --red: #ef4444;
+      --blue: #2563eb;
+      --yellow: #eab308;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #0f172a;
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 14px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .title {
+      font-weight: 600;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Pulsanti */
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-green { background: var(--green); color: #052e16; }
+    .btn-red { background: var(--red); color: #450a0a; }
+    .btn-blue { background: var(--blue); color: white; }
+    .btn-yellow { background: var(--yellow); color: #422006; }
+
+    /* Stato */
+    .status {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .on { background: #052e16; color: var(--green); }
+    .off { background: #450a0a; color: var(--red); }
+
+    /* Toggle switch */
+    .toggle {
+      width: 52px;
+      height: 30px;
+      background: #334155;
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .toggle::after {
+      content: "";
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      transition: all 0.2s ease;
+    }
+
+    .toggle.on {
+      background: var(--blue);
+    }
+
+    .toggle.on::after {
+      left: 25px;
+    }
+
+    .log {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      color: var(--muted);
+    }
   </style>
 </head>
+
 <body>
-  <h2>🔐 Centrale (TEST)</h2>
 
-  <div class="card">
-    <b>Utente Telegram</b>
-    <div id="who" class="small">—</div>
-  </div>
+<h1>🔐 Centrale Allarme</h1>
 
-  <div class="card">
-    <b>Comandi</b>
-    <div class="row">
-      <button onclick="arm()">Attiva</button>
-      <button onclick="disarm()">Disattiva</button>
+<!-- STATO IMPIANTO -->
+<div class="card">
+  <div class="row">
+    <div>
+      <div class="title">Stato Impianto</div>
+      <div class="muted">Modalità corrente</div>
     </div>
+    <div id="alarmStatus" class="status off">DISATTIVO</div>
+  </div>
+</div>
 
-    <button onclick="sendPing()">Invia “ping” al bot</button>
+<!-- COMANDI ALLARME -->
+<div class="card">
+  <div class="title">Comandi</div>
+  <button class="btn-green" onclick="setAlarm('ATTIVO')">ATTIVA</button>
+  <button class="btn-yellow" onclick="setAlarm('NOTTE')">NOTTE</button>
+  <button class="btn-red" onclick="setAlarm('DISATTIVO')">DISATTIVA</button>
+</div>
 
-    <div id="status" class="small" style="margin-top:10px;">Stato: —</div>
+<!-- SENSORI -->
+<div class="card">
+  <div class="title">Sensori Porta</div>
+
+  <div class="row" style="margin-top:10px;">
+    <div>
+      <div>Ingresso</div>
+      <div class="muted">Porta principale</div>
+    </div>
+    <div id="doorIngresso" class="status on">CHIUSA</div>
   </div>
 
-  <div class="card">
-    <b>Log</b>
-    <div id="log">—</div>
+  <div class="row" style="margin-top:10px;">
+    <div>
+      <div>Cameretta</div>
+      <div class="muted">Porta interna</div>
+    </div>
+    <div id="doorCameretta" class="status on">CHIUSA</div>
   </div>
+</div>
+
+<!-- LUCI -->
+<div class="card">
+  <div class="title">Luci</div>
+
+  <div class="row" style="margin-top:10px;">
+    <div>
+      <div>Cucina</div>
+      <div class="muted">Luce principale</div>
+    </div>
+    <div id="lightCucina" class="toggle" onclick="toggleLight()"></div>
+  </div>
+</div>
+
+<!-- LOG -->
+<div class="card">
+  <div class="title">Log Eventi</div>
+  <div id="log" class="log">—</div>
+</div>
 
 <script>
-  const tg = window.Telegram.WebApp;
-  tg.expand(); // apre la mini app a schermo più grande
+  const tg = Telegram.WebApp;
+  tg.expand();
 
-  // Leggi info utente (se disponibili)
-  const user = tg.initDataUnsafe?.user;
-  const who = user
-    ? `${user.first_name || ""} ${user.last_name || ""} (@${user.username || "no-username"}) [id:${user.id}]`
-    : "Utente non disponibile (prova da mobile)";
+  let lightOn = false;
 
-  document.getElementById("who").innerText = who;
-
-  function write(msg) {
+  function log(msg) {
     const el = document.getElementById("log");
     el.innerText = (el.innerText === "—" ? "" : el.innerText + "\n") + msg;
   }
 
-  function setStatus(s) {
-    document.getElementById("status").innerText = "Stato: " + s;
-  }
+  function setAlarm(mode) {
+    const el = document.getElementById("alarmStatus");
 
-  function arm() {
-    setStatus("ATTIVO (test)");
-    write("ARM premuto (solo test)");
+    if (mode === "ATTIVO") {
+      el.innerText = "ATTIVO";
+      el.className = "status on";
+    } else if (mode === "NOTTE") {
+      el.innerText = "NOTTE";
+      el.className = "status on";
+    } else {
+      el.innerText = "DISATTIVO";
+      el.className = "status off";
+    }
+
+    log("Allarme impostato su: " + mode);
     tg.HapticFeedback?.notificationOccurred("success");
   }
 
-  function disarm() {
-    setStatus("DISATTIVO (test)");
-    write("DISARM premuto (solo test)");
-    tg.HapticFeedback?.notificationOccurred("warning");
-  }
+  function toggleLight() {
+    const el = document.getElementById("lightCucina");
+    lightOn = !lightOn;
 
-  function sendPing() {
-    // Invia dati al bot (il bot li riceve come web_app_data)
-    tg.sendData(JSON.stringify({ type: "ping", ts: Date.now() }));
-    write("Inviato ping al bot via tg.sendData()");
+    el.classList.toggle("on", lightOn);
+    log("Luce cucina: " + (lightOn ? "ON" : "OFF"));
+    tg.HapticFeedback?.impactOccurred("light");
   }
 </script>
+
 </body>
 </html>
