@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mini App Test</title>
+
+  <!-- SDK Telegram: serve per leggere utente e usare sendData -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 16px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; margin: 12px 0; }
+    .small { opacity:.75; font-size: 13px; }
+    button { width: 100%; padding: 14px; font-size: 16px; margin-top: 10px; border-radius: 10px; border: 0; }
+    .row { display:flex; gap:10px; }
+    .row button { width: 50%; }
+    #log { white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h2>🔐 Centrale (TEST)</h2>
+
+  <div class="card">
+    <b>Utente Telegram</b>
+    <div id="who" class="small">—</div>
+  </div>
+
+  <div class="card">
+    <b>Comandi</b>
+    <div class="row">
+      <button onclick="arm()">Attiva</button>
+      <button onclick="disarm()">Disattiva</button>
+    </div>
+
+    <button onclick="sendPing()">Invia “ping” al bot</button>
+
+    <div id="status" class="small" style="margin-top:10px;">Stato: —</div>
+  </div>
+
+  <div class="card">
+    <b>Log</b>
+    <div id="log">—</div>
+  </div>
+
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.expand(); // apre la mini app a schermo più grande
+
+  // Leggi info utente (se disponibili)
+  const user = tg.initDataUnsafe?.user;
+  const who = user
+    ? `${user.first_name || ""} ${user.last_name || ""} (@${user.username || "no-username"}) [id:${user.id}]`
+    : "Utente non disponibile (prova da mobile)";
+
+  document.getElementById("who").innerText = who;
+
+  function write(msg) {
+    const el = document.getElementById("log");
+    el.innerText = (el.innerText === "—" ? "" : el.innerText + "\n") + msg;
+  }
+
+  function setStatus(s) {
+    document.getElementById("status").innerText = "Stato: " + s;
+  }
+
+  function arm() {
+    setStatus("ATTIVO (test)");
+    write("ARM premuto (solo test)");
+    tg.HapticFeedback?.notificationOccurred("success");
+  }
+
+  function disarm() {
+    setStatus("DISATTIVO (test)");
+    write("DISARM premuto (solo test)");
+    tg.HapticFeedback?.notificationOccurred("warning");
+  }
+
+  function sendPing() {
+    // Invia dati al bot (il bot li riceve come web_app_data)
+    tg.sendData(JSON.stringify({ type: "ping", ts: Date.now() }));
+    write("Inviato ping al bot via tg.sendData()");
+  }
+</script>
+</body>
+</html>
