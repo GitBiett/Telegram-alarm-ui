@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Centrale Allarme</title>
+  <title>Dashboard Allarme</title>
 
   <!-- Telegram Mini App SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
     :root {
-      --bg: #020617;
+      --bg: #0f172a;
       --card: #020617;
       --border: #1e293b;
       --text: #e5e7eb;
@@ -24,7 +24,7 @@
     body {
       margin: 0;
       padding: 16px;
-      background: #0f172a;
+      background: var(--bg);
       color: var(--text);
       font-family: system-ui, -apple-system, BlinkMacSystemFont;
     }
@@ -51,6 +51,7 @@
 
     .title {
       font-weight: 600;
+      margin-bottom: 6px;
     }
 
     .muted {
@@ -58,7 +59,6 @@
       font-size: 13px;
     }
 
-    /* Pulsanti */
     button {
       width: 100%;
       padding: 14px;
@@ -72,10 +72,8 @@
 
     .btn-green { background: var(--green); color: #052e16; }
     .btn-red { background: var(--red); color: #450a0a; }
-    .btn-blue { background: var(--blue); color: white; }
     .btn-yellow { background: var(--yellow); color: #422006; }
 
-    /* Stato */
     .status {
       padding: 6px 10px;
       border-radius: 999px;
@@ -86,7 +84,6 @@
     .on { background: #052e16; color: var(--green); }
     .off { background: #450a0a; color: var(--red); }
 
-    /* Toggle switch */
     .toggle {
       width: 52px;
       height: 30px;
@@ -122,12 +119,22 @@
       white-space: pre-wrap;
       color: var(--muted);
     }
+
+    .placeholder {
+      margin-top: 12px;
+      background: #020617;
+      border: 1px dashed #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      color: #64748b;
+    }
   </style>
 </head>
 
 <body>
 
-<h1>🔐 Centrale Allarme</h1>
+<h1>🏠 Dashboard Allarme</h1>
 
 <!-- STATO IMPIANTO -->
 <div class="card">
@@ -140,9 +147,9 @@
   </div>
 </div>
 
-<!-- COMANDI ALLARME -->
+<!-- PRESET -->
 <div class="card">
-  <div class="title">Comandi</div>
+  <div class="title">Preset</div>
   <button class="btn-green" onclick="setAlarm('ATTIVO')">ATTIVA</button>
   <button class="btn-yellow" onclick="setAlarm('NOTTE')">NOTTE</button>
   <button class="btn-red" onclick="setAlarm('DISATTIVO')">DISATTIVA</button>
@@ -169,6 +176,29 @@
   </div>
 </div>
 
+<!-- IP CAM -->
+<div class="card">
+  <div class="title">IP Cam</div>
+
+  <div class="row" style="margin-top:10px;">
+    <div>
+      <div>Balcone Cucina</div>
+      <div class="muted">Ultimo screenshot</div>
+    </div>
+    <div class="status off">—</div>
+  </div>
+
+  <div class="row" style="margin-top:10px;">
+    <div>
+      <div>Balcone Cameretta</div>
+      <div class="muted">Ultimo screenshot</div>
+    </div>
+    <div class="status off">—</div>
+  </div>
+
+  <div class="placeholder">Screenshot non disponibile</div>
+</div>
+
 <!-- LUCI -->
 <div class="card">
   <div class="title">Luci</div>
@@ -182,9 +212,21 @@
   </div>
 </div>
 
-<!-- LOG -->
+<!-- STORICO -->
 <div class="card">
-  <div class="title">Log Eventi</div>
+  <div class="title">Storico Attivazioni</div>
+  <div id="history" class="log">—</div>
+</div>
+
+<!-- ERRORI -->
+<div class="card">
+  <div class="title" style="color:#ef4444;">Errori</div>
+  <div id="errors" class="log">Nessun errore rilevato</div>
+</div>
+
+<!-- LOG TECNICO -->
+<div class="card">
+  <div class="title">Log Tecnico</div>
   <div id="log" class="log">—</div>
 </div>
 
@@ -199,32 +241,43 @@
     el.innerText = (el.innerText === "—" ? "" : el.innerText + "\n") + msg;
   }
 
+  function addHistory(msg) {
+    const el = document.getElementById("history");
+    el.innerText = (el.innerText === "—" ? "" : el.innerText + "\n") + msg;
+  }
+
+  function addError(msg) {
+    const el = document.getElementById("errors");
+    el.innerText = (el.innerText.includes("Nessun") ? "" : el.innerText + "\n") + msg;
+  }
+
   function setAlarm(mode) {
     const el = document.getElementById("alarmStatus");
 
-    if (mode === "ATTIVO") {
-      el.innerText = "ATTIVO";
-      el.className = "status on";
-    } else if (mode === "NOTTE") {
-      el.innerText = "NOTTE";
+    if (mode === "ATTIVO" || mode === "NOTTE") {
+      el.innerText = mode;
       el.className = "status on";
     } else {
       el.innerText = "DISATTIVO";
       el.className = "status off";
     }
 
-    log("Allarme impostato su: " + mode);
+    addHistory("Allarme → " + mode);
+    log("Preset selezionato: " + mode);
     tg.HapticFeedback?.notificationOccurred("success");
   }
 
   function toggleLight() {
     const el = document.getElementById("lightCucina");
     lightOn = !lightOn;
-
     el.classList.toggle("on", lightOn);
+
     log("Luce cucina: " + (lightOn ? "ON" : "OFF"));
     tg.HapticFeedback?.impactOccurred("light");
   }
+
+  // esempio errore simulato (puoi rimuoverlo)
+  // addError("Connessione sensore ingresso persa");
 </script>
 
 </body>
