@@ -129,6 +129,17 @@
       text-align: center;
       color: #64748b;
     }
+
+    .sensor .status.on {
+      background: #052e16;
+      color: var(--green);
+    }
+
+    .sensor .status.off {
+      background: #450a0a;
+      color: var(--red);
+    }
+
   </style>
 </head>
 
@@ -159,22 +170,23 @@
 <div class="card">
   <div class="title">Sensori Porta</div>
 
-  <div class="row" style="margin-top:10px;">
+  <div class="row sensor" data-sensor="ingresso">
     <div>
-      <div>Ingresso</div>
+      <div>🚪 Ingresso</div>
       <div class="muted">Porta principale</div>
     </div>
-    <div id="doorIngresso" class="status on">CHIUSA</div>
+    <div id="sensor-ingresso" class="status on">CHIUSA</div>
   </div>
 
-  <div class="row" style="margin-top:10px;">
+  <div class="row sensor" data-sensor="cameretta" style="margin-top:10px;">
     <div>
-      <div>Cameretta</div>
+      <div>🚪 Cameretta</div>
       <div class="muted">Porta interna</div>
     </div>
-    <div id="doorCameretta" class="status on">CHIUSA</div>
+    <div id="sensor-cameretta" class="status on">CHIUSA</div>
   </div>
 </div>
+
 
 <!-- IP CAM -->
 <div class="card">
@@ -276,8 +288,25 @@
     tg.HapticFeedback?.impactOccurred("light");
   }
 
-  // esempio errore simulato (puoi rimuoverlo)
-  // addError("Connessione sensore ingresso persa");
+  <script>
+  function setDoorState(sensorId, isClosed) {
+    const el = document.getElementById("sensor-" + sensorId);
+    if (!el) return;
+
+    if (isClosed) {
+      el.innerText = "CHIUSA";
+      el.className = "status on";
+      log("Sensore " + sensorId + ": CHIUSA");
+    } else {
+      el.innerText = "APERTA";
+      el.className = "status off";
+      log("Sensore " + sensorId + ": APERTA");
+      tg.HapticFeedback?.notificationOccurred("warning");
+    }
+  }
+
+  // simulazione (puoi rimuoverla)
+  // setTimeout(() => setDoorState("ingresso", false), 4000);
 </script>
 
 </body>
