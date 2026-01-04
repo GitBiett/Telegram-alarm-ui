@@ -140,6 +140,11 @@
       color: var(--red);
     }
 
+    button.active {
+      outline: 3px solid white;
+      filter: brightness(1.1);
+    }
+
   </style>
 </head>
 
@@ -161,9 +166,9 @@
 <!-- PRESET -->
 <div class="card">
   <div class="title">Preset</div>
-  <button class="btn-green" onclick="setAlarm('ATTIVO')">ATTIVA</button>
-  <button class="btn-yellow" onclick="setAlarm('NOTTE')">NOTTE</button>
-  <button class="btn-red" onclick="setAlarm('DISATTIVO')">DISATTIVA</button>
+  <button id="btn-attivo" class="btn-green" onclick="setAlarm('ATTIVO')">ATTIVA</button>
+  <button id="btn-notte" class="btn-yellow" onclick="setAlarm('NOTTE')">NOTTE</button>
+  <button id="btn-disattivo" class="btn-red" onclick="setAlarm('DISATTIVO')">DISATTIVA</button>
 </div>
 
 <!-- SENSORI -->
@@ -263,20 +268,38 @@
     el.innerText = (el.innerText.includes("Nessun") ? "" : el.innerText + "\n") + msg;
   }
 
-  function setAlarm(mode) {
-    const el = document.getElementById("alarmStatus");
 
-    if (mode === "ATTIVO" || mode === "NOTTE") {
-      el.innerText = mode;
-      el.className = "status on";
-    } else {
-      el.innerText = "DISATTIVO";
-      el.className = "status off";
+  function setAlarm(mode) {
+    const statusEl = document.getElementById("alarmStatus");
+
+    // reset pulsanti
+    document.getElementById("btn-attivo").classList.remove("active");
+    document.getElementById("btn-notte").classList.remove("active");
+    document.getElementById("btn-disattivo").classList.remove("active");
+
+    if (mode === "ATTIVO") {
+      statusEl.innerText = "ATTIVO";
+      statusEl.className = "status on";
+      document.getElementById("btn-attivo").classList.add("active");
+      tg.HapticFeedback?.notificationOccurred("success");
+    }
+
+    if (mode === "NOTTE") {
+      statusEl.innerText = "NOTTE";
+      statusEl.className = "status on";
+      document.getElementById("btn-notte").classList.add("active");
+      tg.HapticFeedback?.notificationOccurred("success");
+    }
+
+    if (mode === "DISATTIVO") {
+      statusEl.innerText = "DISATTIVO";
+      statusEl.className = "status off";
+      document.getElementById("btn-disattivo").classList.add("active");
+      tg.HapticFeedback?.notificationOccurred("warning");
     }
 
     addHistory("Allarme → " + mode);
     log("Preset selezionato: " + mode);
-    tg.HapticFeedback?.notificationOccurred("success");
   }
 
   function toggleLight() {
